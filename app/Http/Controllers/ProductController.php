@@ -14,6 +14,23 @@ class ProductController extends Controller
     public function index(Request $request): object
     {
         $data = Products::with(['brand', 'model', 'model.capacity', 'type'])
+            ->when(!empty($request->wildcard), function($query) use($request) {
+                $query->where(function($query) use ($request) {
+                    $query->where('product_id', $request->wildcard)
+                        ->orWhereHas('brand', function($query) use ($request) {
+                            $query->where('name', 'LIKE', "%{$request->wildcard}%");
+                        })
+                        ->orWhereHas('model', function($query) use ($request) {
+                            $query->where('name', 'LIKE', "%{$request->wildcard}%");
+                        })
+                        ->orWhereHas('model.capacity', function($query) use ($request) {
+                            $query->where('name', 'LIKE', "%{$request->wildcard}%");
+                        })
+                        ->orWhereHas('type', function($query) use ($request) {
+                            $query->where('name', 'LIKE', "%{$request->wildcard}%");
+                        });
+                });
+            })
             ->paginate($request->itemsPerPage ?: 15);
 
         $data->setCollection($data->getCollection()->transform(function($item, $index) use($request, $data) {

@@ -19,8 +19,9 @@
             <div class="d-flex align-center justify-space-between mb-10">
                 <h4>Product Master List</h4>
                 <v-text-field
+                    v-model="keyword"
                     density="compact"
-                    placeholder="Search"
+                    placeholder="Search by Product ID, Type, Brand, Model Name, Capacity"
                     max-width="20%"
                     hide-details
                 />
@@ -47,6 +48,7 @@
 import axios from 'axios';
 import { onMounted, ref, watch } from 'vue'
 import Swal from 'sweetalert2'
+import _ from 'lodash'
 
 const data = ref(null)
 const modified = ref([])
@@ -54,6 +56,7 @@ const file = ref(null)
 const itemsPerPage = ref(15)
 const page = ref(1)
 const sortBy = ref([])
+const keyword = ref('')
 
 const headers = [
     { title: 'No.', value: 'number', sortable: true },
@@ -104,12 +107,22 @@ watch(sortBy, () => {
     })
 });
 
+watch(keyword, _.debounce(() => {
+    fetchData()
+}, 500))
+
 onMounted(() => {
     fetchData()
 })
 
 const fetchData = () => {
-    axios.get(`/api/products?itemsPerPage=${itemsPerPage.value}&page=${page.value}`).then((res) => {
+    let url = `/api/products?itemsPerPage=${itemsPerPage.value}&page=${page.value}`
+
+    if(keyword !== '') {
+        url += `&wildcard=${keyword.value}`
+    }
+
+    axios.get(url).then((res) => {
         if(res.status) {
             data.value = res.data.data
             modified.value = JSON.parse(JSON.stringify(data.value))
