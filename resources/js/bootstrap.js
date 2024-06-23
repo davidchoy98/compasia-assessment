@@ -5,9 +5,14 @@
  */
 
 import axios from 'axios';
-window.axios = axios;
+window.axios = axios.create({
+    baseURL: import.meta.env.APP_URL,
+    headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+    },
+    timeout: 5000
+});
 
-window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
